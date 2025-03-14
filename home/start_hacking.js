@@ -66,13 +66,15 @@ export async function main(ns) {
   const home_ram = Math.floor(
     (ns.getServerMaxRam("home") - ns.getScriptRam("/find.js")) / mem
   );
-  ns.spawn(
-    script,
-    { threads: home_ram, spawnDelay: 5000 },
-    target,
-    moneyThresh,
-    securityThresh
-  );
+  if (home_ram >= 1) {
+    ns.spawn(
+      script,
+      { threads: home_ram, spawnDelay: 5000 },
+      target,
+      moneyThresh,
+      securityThresh
+    );
+  }
 }
 
 function hack_serv(

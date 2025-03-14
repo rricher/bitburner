@@ -3,7 +3,7 @@ const server_money = {};
 
 /** @param {NS} ns */
 export async function main(ns) {
-  ns.run("/start_hacking.js");
+  // ns.run("/start_hacking.js");
   while (true) {
     await ns.sleep(10000);
     find_servers(ns);
@@ -12,6 +12,9 @@ export async function main(ns) {
 
 function find_servers(ns) {
   // basic script template
+  const home_ram = Math.floor(
+    (ns.getServerMaxRam("home") - ns.getScriptRam("/find.js")) / mem
+  );
   let prev_servers = ns.read("servers.json")
     ? JSON.parse(ns.read("servers.json"))
     : {};
@@ -35,16 +38,28 @@ function find_servers(ns) {
     if (JSON.stringify(prev_servers) != JSON.stringify(servers)) {
       ns.write("servers.json", JSON.stringify(servers, null, "  "), "w");
       ns.scriptKill("/early-hack-template.js", host);
-      ns.run("/start_hacking.js");
+      if (home_ram >= 1) {
+        ns.run("/start_hacking.js");
+      } else {
+        ns.spawn("/start_hacking.js");
+      }
     } else {
       ns.scriptKill("/early-hack-template.js", host);
-      ns.run("/start_hacking.js");
+      if (home_ram >= 1) {
+        ns.run("/start_hacking.js");
+      } else {
+        ns.spawn("/start_hacking.js");
+      }
     }
   } else {
     if (JSON.stringify(prev_servers) != JSON.stringify(servers)) {
       ns.write("servers.json", JSON.stringify(servers, null, "  "), "w");
       ns.scriptKill("/early-hack-template.js", host);
-      ns.run("/start_hacking.js");
+      if (home_ram >= 1) {
+        ns.run("/start_hacking.js");
+      } else {
+        ns.spawn("/start_hacking.js");
+      }
     }
   }
 }
