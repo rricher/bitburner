@@ -1,9 +1,10 @@
 const servers = {};
 const server_money = {};
+let target = "";
 
 /** @param {NS} ns */
 export async function main(ns) {
-  // ns.run("/start_hacking.js");
+  ns.run("/start_hacking.js");
   while (true) {
     await ns.sleep(10000);
     find_servers(ns);
@@ -12,6 +13,7 @@ export async function main(ns) {
 
 function find_servers(ns) {
   // basic script template
+  const mem = ns.getScriptRam("early-hack-template.js");
   const home_ram = Math.floor(
     (ns.getServerMaxRam("home") - ns.getScriptRam("/find.js")) / mem
   );
@@ -41,14 +43,14 @@ function find_servers(ns) {
       if (home_ram >= 1) {
         ns.run("/start_hacking.js");
       } else {
-        ns.spawn("/start_hacking.js");
+        ns.run("/start_hacking.js");
       }
     } else {
       ns.scriptKill("/early-hack-template.js", host);
       if (home_ram >= 1) {
         ns.run("/start_hacking.js");
       } else {
-        ns.spawn("/start_hacking.js");
+        ns.run("/start_hacking.js");
       }
     }
   } else {
@@ -58,7 +60,22 @@ function find_servers(ns) {
       if (home_ram >= 1) {
         ns.run("/start_hacking.js");
       } else {
-        ns.spawn("/start_hacking.js");
+        ns.run("/start_hacking.js");
+      }
+    } else {
+      let new_target = "";
+      for (const [key, value] of Object.entries(server_money)) {
+        if (ns.getHackingLevel() >= key) {
+          if (ns.hasRootAccess(value[1])) {
+            new_target = value[1];
+          }
+        } else {
+          break;
+        }
+      }
+      if (new_target != target) {
+        target = new_target;
+        ns.run("/start_hacking.js");
       }
     }
   }

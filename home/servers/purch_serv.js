@@ -18,8 +18,7 @@ export async function main(ns) {
       //  3. Run our hacking script on the newly-purchased server with 3 threads
       //  4. Increment our iterator to indicate that we've bought a new server
       let hostname = ns.purchaseServer("pserv-" + i, ram);
-      ns.scp("early-hack-template.js", hostname);
-      ns.exec("early-hack-template.js", hostname, 3);
+      // ns.("/start_hacking.js");
       ++i;
     }
     //Make the script wait for a second before looping again.

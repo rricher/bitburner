@@ -17,7 +17,9 @@ export async function main(ns) {
   let target = null;
   for (const [key, value] of Object.entries(servers_money)) {
     if (skill >= key) {
-      target = value[1];
+      if (ns.hasRootAccess(value[1])) {
+        target = value[1];
+      }
     } else {
       break;
     }
@@ -64,9 +66,10 @@ export async function main(ns) {
     securityThresh
   );
   const home_ram = Math.floor(
-    (ns.getServerMaxRam("home") - ns.getScriptRam("/find.js")) / mem
+    (ns.getServerMaxRam("home") - ns.getScriptRam("/find.js") - 15) / mem
   );
   if (home_ram >= 1) {
+    ns.scriptKill(script, "home");
     ns.spawn(
       script,
       { threads: home_ram, spawnDelay: 5000 },
@@ -91,9 +94,7 @@ function hack_serv(
     for (const serv of value) {
       if (ns.hasRootAccess(serv)) {
         ns.scp(script, serv);
-        ns.nuke(serv);
       } else if (key <= level) {
-        ns.tprint(key, " ", level);
         if (level == 5) {
           ns.sqlinject(serv);
         }
