@@ -6,8 +6,8 @@ let target = "";
 export async function main(ns) {
   ns.run("/start_hacking.js");
   while (true) {
-    await ns.sleep(10000);
     find_servers(ns);
+    await ns.sleep(10000);
   }
 }
 
@@ -83,14 +83,15 @@ function find_servers(ns) {
 
 function scan_server(ns, host) {
   let info = ns.getServer(host);
+  let ram = info.maxRam;
   let money = info.moneyMax;
   let ports = info.numOpenPortsRequired;
   let skill = info.requiredHackingSkill ? info.requiredHackingSkill : 0;
   if (!(ports in servers)) {
-    servers[ports] = [];
+    servers[ports] = {};
   }
-  if (!servers[ports].includes(host)) {
-    servers[ports].push(host);
+  if (!(host in servers[ports])) {
+    servers[ports][host] = ram;
     if (money > 0) {
       if (skill in server_money) {
         if (server_money[skill][0] < money) {

@@ -91,7 +91,7 @@ function hack_serv(
   securityThresh
 ) {
   for (const [key, value] of Object.entries(servers)) {
-    for (const serv of value) {
+    for (let serv in value) {
       if (ns.hasRootAccess(serv)) {
         ns.scp(script, serv);
       } else if (key <= level) {
