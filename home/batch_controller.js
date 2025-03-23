@@ -14,17 +14,22 @@ let servers_money = {};
 
 /** @param {NS} ns */
 function get_target(ns) {
+  let new_target_max_money = 0;
+  let new_target = "server";
   const skill = ns.getHackingLevel();
   for (const [key, value] of Object.entries(servers_money)) {
     if (skill >= key) {
+      ns.tprint("Key: " + key);
+      ns.tprint("Value: " + value);
       if (ns.hasRootAccess(value[1])) {
-        target_max_money = value[0];
-        target = value[1];
+        new_target_max_money = value[0];
+        new_target = value[1];
       }
     } else {
       break;
     }
   }
+  return [new_target_max_money, new_target];
 }
 
 /** @param {NS} ns */
@@ -42,16 +47,26 @@ function get_total_threads(ns) {
 
 /** @param {NS} ns */
 export async function main(ns) {
+  await ns.run("find_batch.js");
+  await ns.sleep(1000);
   servers = ns.read("batch_servers.json")
     ? JSON.parse(ns.read("batch_servers.json"))
     : {};
   servers_money = ns.read("batch_money.json")
     ? JSON.parse(ns.read("batch_money.json"))
     : {};
-  get_target(ns);
+  let [new_target_max_money, new_target] = get_target(ns);
+  ns.tprint("Target: " + new_target);
+  ns.tprint("Target max money: " + new_target_max_money);
+  if (new_target != target) {
+    target = new_target;
+    target_max_money = new_target_max_money;
+  }
+  ns.tprint("Target: " + target);
   get_total_ram(ns);
+  ns.tprint("Total RAM: " + total_ram);
   get_total_threads(ns);
-  target_max_money = ns.getServerMaxMoney(target);
+  ns.tprint("Total threads: " + total_threads);
   target_min_security = ns.getServerMinSecurityLevel(target);
   let wait_time = 0;
   wait_time = await prep_target(ns);
@@ -59,6 +74,25 @@ export async function main(ns) {
   used_servers = {};
   used_ram = 0;
   await run_batch(ns);
+  while (true) {
+    await ns.run("find_batch.js");
+    await ns.sleep(1000);
+    let [new_target_max_money, new_target] = get_target(ns);
+    if (new_target != target) {
+      target = new_target;
+      target_max_money = new_target_max_money;
+      target_min_security = ns.getServerMinSecurityLevel(target);
+      ns.scriptKill("/batch_run.js", "home");
+      ns.run("killall.js");
+      get_total_threads(ns);
+      wait_time = await prep_target(ns);
+      await ns.sleep(wait_time);
+      used_servers = {};
+      used_ram = 0;
+      await run_batch(ns);
+    }
+    await ns.sleep(10000);
+  }
 }
 
 /** @param {NS} ns */
@@ -111,6 +145,8 @@ async function run_batch(ns) {
   while (max_batches < total_threads) {
     max_batches = Math.floor(total_threads / total_single_threads);
     ns.tprint("Max batches: " + max_batches);
+    ns.tprint("Total threads: " + total_threads);
+    ns.tprint("Single threads: " + total_single_threads);
     let hack_threads = max_batches;
     ns.tprint("Hack threads: " + hack_threads);
     [weaken_hack_threads, grow_threads, weaken_grow_threads] = get_threads(

@@ -41,17 +41,26 @@ function scan(ns, server, level) {
   let money = info.moneyMax;
   let ports = info.numOpenPortsRequired;
   let skill = info.requiredHackingSkill ? info.requiredHackingSkill : 0;
+  if (!ns.hasRootAccess(server) && ports <= level) {
+    if (level == 5) {
+      ns.sqlinject(server);
+    }
+    if (level >= 4) {
+      ns.httpworm(server);
+    }
+    if (level >= 3) {
+      ns.relaysmtp(server);
+    }
+    if (level >= 2) {
+      ns.ftpcrack(server);
+    }
+    if (level >= 1) {
+      ns.brutessh(server);
+    }
+    ns.nuke(server);
+  }
   if ((ns.hasRootAccess(server) && ram > 0) || (ports <= level && ram > 0)) {
     servers[server] = ram;
-    // if (!ns.fileExists("hack.js", server)) {
-    //   ns.scp("hack.js", server);
-    // // }
-    // if (!ns.fileExists("grow.js", server)) {
-    //   ns.scp("grow.js", server);
-    // }
-    // if (!ns.fileExists("weaken.js", server)) {
-    //   ns.scp("weaken.js", server);
-    // }
     ns.scp("hack.js", server);
     ns.scp("grow.js", server);
     ns.scp("weaken.js", server);
