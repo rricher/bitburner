@@ -68,8 +68,16 @@ export async function main(ns) {
   get_total_threads(ns);
   ns.tprint("Total threads: " + total_threads);
   target_min_security = ns.getServerMinSecurityLevel(target);
+  ns.tprint("Target min security: " + target_min_security);
   let wait_time = 0;
   wait_time = await prep_target(ns);
+  ns.tprint(
+    "Wait time: " +
+      Math.floor(wait_time / 60000) +
+      "." +
+      Math.floor((wait_time % 60000) / 6000) +
+      " min"
+  );
   await ns.sleep(wait_time);
   used_servers = {};
   used_ram = 0;
@@ -97,30 +105,30 @@ export async function main(ns) {
 
 /** @param {NS} ns */
 function get_threads(ns, hack_threads) {
-  ns.tprint("Calculating threads...");
-  ns.tprint("Hack threads: " + hack_threads);
+  // ns.tprint("Calculating threads...");
+  // ns.tprint("Hack threads: " + hack_threads);
   let weaken_single_thread = ns.weakenAnalyze(1);
-  ns.tprint("Weaken single thread: " + weaken_single_thread);
+  // ns.tprint("Weaken single thread: " + weaken_single_thread);
   let hack_money_percent = ns.hackAnalyze(target) * hack_threads;
-  ns.tprint("Hack money percent: " + hack_money_percent);
+  // ns.tprint("Hack money percent: " + hack_money_percent);
   let hack_security_increase = ns.hackAnalyzeSecurity(hack_threads);
-  ns.tprint("Hack security increase: " + hack_security_increase);
+  // ns.tprint("Hack security increase: " + hack_security_increase);
   let weaken_hack_threads = Math.ceil(
     hack_security_increase / weaken_single_thread
   );
-  ns.tprint("Weaken hack threads: " + weaken_hack_threads);
+  // ns.tprint("Weaken hack threads: " + weaken_hack_threads);
   let money_after_hack = target_max_money * (1 - hack_money_percent);
-  ns.tprint("Money after hack: " + money_after_hack);
+  // ns.tprint("Money after hack: " + money_after_hack);
   let grow_threads = Math.ceil(
     ns.growthAnalyze(target, target_max_money / money_after_hack)
   );
-  ns.tprint("Grow threads: " + grow_threads);
+  // ns.tprint("Grow threads: " + grow_threads);
   let grow_securty_increase = ns.growthAnalyzeSecurity(grow_threads);
-  ns.tprint("Grow security increase: " + grow_securty_increase);
+  // ns.tprint("Grow security increase: " + grow_securty_increase);
   let weaken_grow_threads = Math.ceil(
     grow_securty_increase / weaken_single_thread
   );
-  ns.tprint("Weaken grow threads: " + weaken_grow_threads);
+  // ns.tprint("Weaken grow threads: " + weaken_grow_threads);
   return [weaken_hack_threads, grow_threads, weaken_grow_threads];
 }
 
@@ -130,9 +138,27 @@ async function run_batch(ns) {
   let weaken_time = ns.getWeakenTime(target);
   let grow_time = ns.getGrowTime(target);
   let hack_time = ns.getHackTime(target);
-  ns.tprint("Weaken time: " + weaken_time);
-  ns.tprint("Grow time: " + grow_time);
-  ns.tprint("Hack time: " + hack_time);
+  ns.tprint(
+    "Weaken time: " +
+      Math.floor(weaken_time / 60000) +
+      "." +
+      Math.floor((weaken_time % 60000) / 6000) +
+      " min"
+  );
+  ns.tprint(
+    "Grow time: " +
+      Math.floor(grow_time / 60000) +
+      "." +
+      Math.floor((grow_time % 60000) / 6000) +
+      " min"
+  );
+  ns.tprint(
+    "Hack time: " +
+      Math.floor(hack_time / 60000) +
+      "." +
+      Math.floor((hack_time % 60000) / 6000) +
+      " min"
+  );
 
   let [weaken_hack_threads, grow_threads, weaken_grow_threads] = get_threads(
     ns,
@@ -142,12 +168,12 @@ async function run_batch(ns) {
     weaken_hack_threads + grow_threads + weaken_grow_threads + 1;
   ns.tprint("Single threads: " + total_single_threads);
   let max_batches = 0;
-  while (max_batches < total_threads) {
+  while (max_batches < total_threads / total_single_threads) {
     max_batches = Math.floor(total_threads / total_single_threads);
     ns.tprint("Max batches: " + max_batches);
     ns.tprint("Total threads: " + total_threads);
     ns.tprint("Single threads: " + total_single_threads);
-    let hack_threads = max_batches;
+    let hack_threads = max_batches * total_single_threads;
     ns.tprint("Hack threads: " + hack_threads);
     [weaken_hack_threads, grow_threads, weaken_grow_threads] = get_threads(
       ns,
@@ -157,10 +183,31 @@ async function run_batch(ns) {
     let grow_wait = weaken_time - grow_time - time;
     let hack_wait = weaken_time - hack_time - grow_wait - time * 3;
     assign_servers(ns, weaken_hack_threads, weaken, wait_time);
+    ns.tprint(
+      "sleeping for: " +
+        Math.floor((time * 2) / 60000) +
+        "." +
+        Math.floor(((time * 2) % 60000) / 6000) +
+        " min"
+    );
     await ns.sleep(time * 2);
     assign_servers(ns, weaken_grow_threads, weaken, wait_time);
+    ns.tprint(
+      "sleeping for: " +
+        Math.floor(grow_wait / 60000) +
+        "." +
+        Math.floor((grow_wait % 60000) / 6000) +
+        " min"
+    );
     await ns.sleep(grow_wait);
     assign_servers(ns, grow_threads, grow, wait_time);
+    ns.tprint(
+      "sleeping for: " +
+        Math.floor(hack_wait / 60000) +
+        "." +
+        Math.floor((hack_wait % 60000) / 6000) +
+        " min"
+    );
     await ns.sleep(hack_wait);
     assign_servers(ns, hack_threads, hack, wait_time);
   }
@@ -171,6 +218,7 @@ async function prep_target(ns) {
   let weaken_time = ns.getWeakenTime(target);
   let grow_time = ns.getGrowTime(target);
   let target_curr_security = ns.getServerSecurityLevel(target);
+  ns.tprint("Target current security: " + target_curr_security);
   let weaken_single_thread = ns.weakenAnalyze(1);
   let weaken_threads = Math.ceil(
     (target_curr_security - target_min_security) / weaken_single_thread
@@ -188,8 +236,22 @@ async function prep_target(ns) {
     let grow_wait = weaken_time - grow_time;
     wait_time = weaken_time - grow_wait - time * 2;
     assign_servers_prep(ns, weaken_threads, weaken);
+    ns.tprint(
+      "sleeping for: " +
+        Math.floor(time / 60000) +
+        "." +
+        Math.floor((time % 60000) / 6000) +
+        " min"
+    );
     await ns.sleep(time);
     assign_servers_prep(ns, weaken_grow_threads, weaken);
+    ns.tprint(
+      "sleeping for: " +
+        Math.floor((grow_wait - time) / 60000) +
+        "." +
+        Math.floor(((grow_wait - time) % 60000) / 6000) +
+        " min"
+    );
     await ns.sleep(grow_wait - time);
     assign_servers_prep(ns, grow_threads, grow);
   } else if (weaken_threads > 0) {
