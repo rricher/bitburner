@@ -123,10 +123,10 @@ function get_threads(ns, hack_threads) {
     ns.growthAnalyze(target, target_max_money / money_after_hack)
   );
   // ns.tprint("Grow threads: " + grow_threads);
-  let grow_securty_increase = ns.growthAnalyzeSecurity(grow_threads);
-  // ns.tprint("Grow security increase: " + grow_securty_increase);
+  let grow_security_increase = ns.growthAnalyzeSecurity(grow_threads);
+  // ns.tprint("Grow security increase: " + grow_security_increase);
   let weaken_grow_threads = Math.ceil(
-    grow_securty_increase / weaken_single_thread
+    grow_security_increase / weaken_single_thread
   );
   // ns.tprint("Weaken grow threads: " + weaken_grow_threads);
   return [weaken_hack_threads, grow_threads, weaken_grow_threads];
@@ -227,9 +227,9 @@ async function prep_target(ns) {
   let grow_threads = Math.ceil(
     ns.growthAnalyze(target, target_max_money / target_curr_money)
   );
-  let grow_securty_increase = ns.growthAnalyzeSecurity(grow_threads);
+  let grow_security_increase = ns.growthAnalyzeSecurity(grow_threads);
   let weaken_grow_threads = Math.ceil(
-    grow_securty_increase / weaken_single_thread
+    grow_security_increase / weaken_single_thread
   );
   let wait_time = 0;
   if (weaken_threads > 0 && grow_threads > 0) {
